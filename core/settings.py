@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from os import getenv, path
 from pathlib import Path
+import dj_database_url
+import sys
 import dotenv
 from django.core.management.utils import get_random_secret_key
 
@@ -23,6 +25,9 @@ dotenv_file = BASE_DIR / '.env.local'
 
 if path.isfile(dotenv_file):
     dotenv.load_dotenv(dotenv_file)
+
+
+DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -55,6 +60,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'djoser',
+    'storages',
     'social_django',
 
 
@@ -83,8 +89,8 @@ AUTH_COOKIE_SAMESITE = 'None'
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('GOOGLE_AUTH_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('GOOGLE_AUTH_SECRET_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
-    'https://www.googleapis.com/auth/userinfo.email/',
-    'https://www.googleapis.com/auth/userinfo.profile/',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
     'openid'
 ]
 SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
@@ -144,12 +150,19 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEVELOPMENT_MODE is True:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+    if os.getenv('DATABASE_URL', None) is None:
+        raise Exception('DATABASE_URL environment variable not defined')
+    DATABASES = {
+        'default': dj_database_url.parse(getenv('DATABASE_URL')),
+    }
 
 
 # Password validation
@@ -186,11 +199,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'static'
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
+if DEVELOPMENT_MODE is True:
+    STATIC_URL = 'static/'
+    STATIC_ROOT = BASE_DIR / 'static'
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    AWS_S3_ACCESS_KEY_ID = getenv('AWS_S3_ACCESS_KEY_ID')
+    AWS_S3_SECRET_ACCESS_KEY = getenv('AWS_S3_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME')
+    AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CasheControl': 'max-age=86400'
+    }
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_LOCATION = 'static'
+    AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN')
+    STORAGES = {
+        'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
+        'staticfiles': {'BACKEND': 'storages.backends.s3boto3.S3StaticStorage'}
+    }
 
 AUTHENTICATION_BACKENDS = [
     'social_core.backends.google.GoogleOAuth2',

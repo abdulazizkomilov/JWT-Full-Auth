@@ -164,6 +164,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
 
 if DEVELOPMENT_MODE is True:
     STATIC_URL = 'static/'
@@ -182,6 +184,14 @@ else:
     AWS_DEFAULT_ACL = 'public-read'
     AWS_LOCATION = 'static'
     AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN')
+    STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+    MEDIA_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static'),
+    ]
+    MEDIAFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static'),
+    ]
     STORAGES = {
         'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
         'staticfiles': {'BACKEND': 'storages.backends.s3boto3.S3StaticStorage'}

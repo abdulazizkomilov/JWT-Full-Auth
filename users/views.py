@@ -14,7 +14,7 @@ class CustomProviderAuthView(ProviderAuthView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
 
-        if response.status_code == 200:
+        if response.status_code == 201:
             access_token = response.data.get('access')
             refresh_token = response.data.get('refresh')
 
@@ -37,8 +37,8 @@ class CustomProviderAuthView(ProviderAuthView):
                 samesite=settings.AUTH_COOKIE_SAMESITE
             )
 
-
         return response
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -93,7 +93,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             )
 
         return response
-    
+
 
 class CustomTokenVerifyView(TokenVerifyView):
     def post(self, request, *args, **kwargs):
@@ -103,7 +103,6 @@ class CustomTokenVerifyView(TokenVerifyView):
             request.data['token'] = access_token
 
         return super().post(request, *args, **kwargs)
-    
 
 
 class LogoutView(APIView):

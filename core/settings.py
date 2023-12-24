@@ -5,6 +5,16 @@ import dj_database_url
 import sys
 import dotenv
 from django.core.management.utils import get_random_secret_key
+from .cdn.conf import (
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_S3_SIGNATURE_VERSION,
+    AWS_STORAGE_BUCKET_NAME,
+    AWS_ENDPOINT_URL,
+    AWS_S3_OBJECT_PARAMETERS,
+    DEFAULT_FILE_STORAGE,
+    STATICFILES_STORAGE,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -167,35 +177,58 @@ USE_TZ = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
 
-if DEVELOPMENT_MODE is True:
-    STATIC_URL = 'static/'
-    STATIC_ROOT = BASE_DIR / 'static'
-    MEDIA_URL = 'media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
-else:
-    AWS_S3_ACCESS_KEY_ID = getenv('AWS_S3_ACCESS_KEY_ID')
-    AWS_S3_SECRET_ACCESS_KEY = getenv('AWS_S3_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME')
-    AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CasheControl': 'max-age=86400'
-    }
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_LOCATION = 'static'
-    AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN')
-    STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
-    MEDIA_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
-    ]
-    MEDIAFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
-    ]
-    STORAGES = {
-        'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
-        'staticfiles': {'BACKEND': 'storages.backends.s3boto3.S3StaticStorage'}
-    }
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2000
+
+
+AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME
+AWS_S3_ENDPOINT_URL = AWS_ENDPOINT_URL
+AWS_S3_OBJECT_PARAMETERS = AWS_S3_OBJECT_PARAMETERS
+AWS_LOCATION = AWS_STORAGE_BUCKET_NAME
+AWS_QUERYSTRING_EXPIRE = 3600
+STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+MEDIA_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+MEDIAFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+STATICFILES_STORAGE = STATICFILES_STORAGE
+DEFAULT_FILE_STORAGE = DEFAULT_FILE_STORAGE
+
+# if DEVELOPMENT_MODE is True:
+#     STATIC_URL = 'static/'
+#     STATIC_ROOT = BASE_DIR / 'static'
+#     MEDIA_URL = 'media/'
+#     MEDIA_ROOT = BASE_DIR / 'media'
+# else:
+#     AWS_S3_ACCESS_KEY_ID = getenv('AWS_S3_ACCESS_KEY_ID')
+#     AWS_S3_SECRET_ACCESS_KEY = getenv('AWS_S3_SECRET_ACCESS_KEY')
+#     AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
+#     AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME')
+#     AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+#     AWS_S3_OBJECT_PARAMETERS = {
+#         'CasheControl': 'max-age=86400'
+#     }
+#     AWS_DEFAULT_ACL = 'public-read'
+#     AWS_LOCATION = 'static'
+#     AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN')
+#     STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+#     MEDIA_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+#     STATICFILES_DIRS = [
+#         os.path.join(BASE_DIR, 'static'),
+#     ]
+#     MEDIAFILES_DIRS = [
+#         os.path.join(BASE_DIR, 'static'),
+#     ]
+#     STORAGES = {
+#         'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
+#         'staticfiles': {'BACKEND': 'storages.backends.s3boto3.S3StaticStorage'}
+#     }
 
 AUTHENTICATION_BACKENDS = [
     'social_core.backends.google.GoogleOAuth2',
